@@ -1,0 +1,2645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ITC Pharma Analytics Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --accent-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            --dark-gradient: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #e2e8f0;
+            --bg-glass: rgba(255, 255, 255, 0.25);
+            --text-primary: #1a202c;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            --border-radius: 16px;
+            --border-radius-sm: 8px;
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a202c;
+            --bg-secondary: #2d3748;
+            --bg-tertiary: #4a5568;
+            --bg-glass: rgba(26, 32, 44, 0.25);
+            --text-primary: #f7fafc;
+            --text-secondary: #e2e8f0;
+            --text-muted: #a0aec0;
+            --border-color: #4a5568;
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+            --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: var(--transition);
+            overflow-x: hidden;
+            font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+        }
+
+        /* Enhanced Animated Background */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab, #667eea, #764ba2);
+            background-size: 600% 600%;
+            animation: gradientShift 20s ease infinite;
+            opacity: 0.03;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            25% { background-position: 100% 50%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 0% 100%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Floating Particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+            opacity: 0.1;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.1;
+            }
+            90% {
+                opacity: 0.1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Enhanced Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            transition: var(--transition);
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--primary-gradient);
+            opacity: 0.05;
+            z-index: -1;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-weight: 800;
+            font-size: 1.75rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.025em;
+        }
+
+        .logo i {
+            font-size: 2rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: pulse 2s infinite;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* ITC Unit Selector */
+        .itc-selector {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            padding: 0.5rem;
+            border-radius: 50px;
+            border: 1px solid var(--border-color);
+        }
+
+        .itc-unit-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .itc-unit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .itc-unit-btn:hover::before {
+            left: 100%;
+        }
+
+        .itc-unit-btn.active {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-1px);
+        }
+
+        .itc-unit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Main Layout */
+        .main-container {
+            margin-top: 80px;
+            height: calc(100vh - 80px);
+            display: flex;
+            position: relative;
+        }
+
+        #map {
+            flex: 1;
+            height: 100%;
+            position: relative;
+            border-radius: 0 var(--border-radius) 0 0;
+            overflow: hidden;
+        }
+
+        /* Enhanced Sidebar */
+        .sidebar {
+            width: 420px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-left: 1px solid var(--border-color);
+            overflow-y: auto;
+            transition: var(--transition);
+            box-shadow: var(--shadow-2xl);
+            position: relative;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--primary-gradient);
+            opacity: 0.02;
+            z-index: -1;
+        }
+
+        .sidebar.collapsed {
+            width: 80px;
+        }
+
+        .sidebar-header {
+            padding: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--primary-gradient);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .sidebar-content {
+            padding: 2rem;
+        }
+
+        .sidebar.collapsed .sidebar-content {
+            display: none;
+        }
+
+        /* Enhanced Cards */
+        .card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px) saturate(180%);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+            overflow: hidden;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-2xl);
+            transform: translateY(-4px);
+        }
+
+        .card-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .card-header i {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.25rem;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        /* Enhanced Form Controls */
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        /* Enhanced Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-success {
+            background: var(--success-gradient);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning-gradient);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger-gradient);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        /* Enhanced Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 70px;
+            height: 40px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-tertiary);
+            transition: var(--transition);
+            border-radius: 40px;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 32px;
+            width: 32px;
+            left: 4px;
+            bottom: 4px;
+            background: white;
+            transition: var(--transition);
+            border-radius: 50%;
+            box-shadow: var(--shadow-md);
+        }
+
+        input:checked + .toggle-slider {
+            background: var(--primary-gradient);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+
+        /* Enhanced Range Slider */
+        .range-slider {
+            position: relative;
+            margin: 1.5rem 0;
+        }
+
+        .range-input {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--bg-tertiary);
+            outline: none;
+            -webkit-appearance: none;
+            position: relative;
+        }
+
+        .range-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            cursor: pointer;
+            box-shadow: var(--shadow-lg);
+            transition: var(--transition);
+        }
+
+        .range-input::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .range-input::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            cursor: pointer;
+            border: none;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .range-value {
+            position: absolute;
+            top: -45px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text-primary);
+            color: var(--bg-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            white-space: nowrap;
+            box-shadow: var(--shadow-md);
+        }
+
+        .range-value::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: var(--text-primary);
+        }
+
+        /* Enhanced Statistics Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            padding: 2rem 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: -1;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: var(--shadow-2xl);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.75rem;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 600;
+        }
+
+        /* Enhanced Chart Container */
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin: 1.5rem 0;
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Enhanced Legend */
+        .legend {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 0.75rem;
+            transition: var(--transition);
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .legend-item:hover {
+            background: var(--bg-secondary);
+            border-color: var(--border-color);
+            transform: translateX(4px);
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 1rem;
+            box-shadow: var(--shadow-sm);
+            flex-shrink: 0;
+            border: 2px solid white;
+        }
+
+        .legend-text {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Enhanced Table */
+        .table-container {
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 1.25rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .table th {
+            background: var(--bg-secondary);
+            font-weight: 700;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .table tbody tr {
+            transition: var(--transition);
+        }
+
+        .table tbody tr:hover {
+            background: var(--bg-secondary);
+            transform: scale(1.01);
+        }
+
+        /* Enhanced Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            box-shadow: var(--shadow-2xl);
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+        }
+
+        .fab:hover {
+            transform: scale(1.15) rotate(5deg);
+            box-shadow: 0 25px 50px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Enhanced Notifications */
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 2rem;
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-2xl);
+            padding: 1.5rem 2rem;
+            z-index: 1002;
+            transform: translateX(400px);
+            transition: var(--transition);
+            max-width: 400px;
+            min-width: 300px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left: 4px solid #10b981;
+        }
+
+        .notification.error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .notification.warning {
+            border-left: 4px solid #f59e0b;
+        }
+
+        /* Enhanced Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-glass);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .loading-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Enhanced Filter Pills */
+        .filter-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-pill {
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .filter-pill.active {
+            background: var(--primary-gradient);
+            color: white;
+            border-color: transparent;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .filter-pill:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Enhanced Tab Navigation */
+        .tab-nav {
+            display: flex;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius-sm);
+            padding: 6px;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .tab-btn.active {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        /* ITC Unit Info Panel */
+        .itc-info-panel {
+            position: absolute;
+            top: 100px;
+            left: 2rem;
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-xl);
+            z-index: 1000;
+            min-width: 300px;
+            transform: translateX(-400px);
+            transition: var(--transition);
+        }
+
+        .itc-info-panel.show {
+            transform: translateX(0);
+        }
+
+        .itc-info-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .itc-info-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .itc-stat {
+            text-align: center;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .itc-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .itc-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.25rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 380px;
+            }
+            
+            .itc-selector {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 0 1rem;
+                height: 70px;
+            }
+            
+            .main-container {
+                margin-top: 70px;
+                height: calc(100vh - 70px);
+            }
+            
+            .logo {
+                font-size: 1.25rem;
+            }
+            
+            .sidebar {
+                position: fixed;
+                top: 70px;
+                right: 0;
+                height: calc(100vh - 70px);
+                width: 100%;
+                max-width: 420px;
+                transform: translateX(100%);
+                z-index: 1000;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .fab {
+                bottom: 1rem;
+                right: 1rem;
+                width: 60px;
+                height: 60px;
+            }
+            
+            .itc-info-panel {
+                left: 1rem;
+                right: 1rem;
+                min-width: auto;
+            }
+            
+            .itc-selector {
+                display: none;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-tertiary);
+            border-radius: 5px;
+            border: 2px solid var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .animate-pulse {
+            animation: pulse 2s infinite;
+        }
+
+        /* Custom Map Styles */
+        .leaflet-popup-content-wrapper {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .leaflet-popup-tip {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+        }
+
+        .custom-popup {
+            border-radius: var(--border-radius);
+        }
+
+        /* Enhanced marker styles */
+        .custom-cluster-icon {
+            border-radius: 50% !important;
+            box-shadow: var(--shadow-lg) !important;
+        }
+
+        .itc-marker, .pharma-marker {
+            border-radius: 50% !important;
+            box-shadow: var(--shadow-lg) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="animated-bg"></div>
+    
+    <!-- Floating Particles -->
+    <div class="particles" id="particles"></div>
+    
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <i class="fas fa-chart-network"></i>
+            <span>ITC Pharma Analytics</span>
+        </div>
+        
+        <!-- ITC Unit Selector -->
+        <div class="itc-selector">
+            <button class="itc-unit-btn active" data-unit="All" onclick="selectITCUnit('All')">
+                <i class="fas fa-globe"></i> All Units
+            </button>
+            <button class="itc-unit-btn" data-unit="Chennai" onclick="selectITCUnit('Chennai')">
+                <i class="fas fa-building"></i> Chennai
+            </button>
+            <button class="itc-unit-btn" data-unit="Haridwar" onclick="selectITCUnit('Haridwar')">
+                <i class="fas fa-building"></i> Haridwar
+            </button>
+            <button class="itc-unit-btn" data-unit="Nadiad" onclick="selectITCUnit('Nadiad')">
+                <i class="fas fa-building"></i> Nadiad
+            </button>
+        </div>
+        
+        <div class="header-controls">
+            <button class="btn btn-secondary" onclick="toggleTheme()" id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+            <button class="btn btn-primary" onclick="toggleSidebar()" id="sidebarToggle">
+                <i class="fas fa-sliders-h"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ITC Info Panel -->
+    <div class="itc-info-panel" id="itcInfoPanel">
+        <div class="itc-info-title" id="itcInfoTitle">All ITC Units</div>
+        <div class="itc-info-stats" id="itcInfoStats">
+            <!-- Stats will be populated here -->
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Map -->
+        <div id="map"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-filter"></i> Control Panel</h3>
+                <button class="btn btn-secondary" onclick="toggleSidebar()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="sidebar-content">
+                <!-- Statistics -->
+                <div class="card" data-aos="fade-up">
+                    <div class="card-header">
+                        <i class="fas fa-chart-bar"></i>
+                        Real-time Statistics
+                    </div>
+                    <div class="card-body">
+                        <div class="stats-grid" id="statsGrid">
+                            <!-- Stats will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Filters -->
+                <div class="card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="card-header">
+                        <i class="fas fa-bolt"></i>
+                        Quick Filters
+                    </div>
+                    <div class="card-body">
+                        <div class="filter-pills" id="quickFilters">
+                            <div class="filter-pill active" data-preset="all">All Companies</div>
+                            <div class="filter-pill" data-preset="nearby">Nearby (&lt;100km)</div>
+                            <div class="filter-pill" data-preset="medium">Medium (&lt;300km)</div>
+                            <div class="filter-pill" data-preset="top-companies">Top 5 Companies</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Filters -->
+                <div class="card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="card-header">
+                        <i class="fas fa-sliders-h"></i>
+                        Advanced Filters
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label">Search</label>
+                            <input type="text" class="form-control" id="searchInput" placeholder="Search companies, cities...">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Pharma Company</label>
+                            <select class="form-control" id="pharmaDropdown">
+                                <option value="All">All Companies</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Distance Range</label>
+                            <div class="range-slider">
+                                <input type="range" class="range-input" id="distanceSlider" min="0" max="2000" step="50" value="2000">
+                                <div class="range-value" id="rangeValue">2000 km</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Map Controls -->
+                <div class="card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="card-header">
+                        <i class="fas fa-map"></i>
+                        Map Options
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Clustering</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="clusterToggle" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Heatmap</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="heatmapToggle">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Distance Lines</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="linesToggle">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Coverage Zones</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="coverageToggle">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics -->
+                <div class="card" data-aos="fade-up" data-aos-delay="400">
+                    <div class="card-header">
+                        <i class="fas fa-chart-pie"></i>
+                        Analytics
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-nav">
+                            <button class="tab-btn active" onclick="showAnalyticsTab('distribution')">Distribution</button>
+                            <button class="tab-btn" onclick="showAnalyticsTab('distance')">Distance</button>
+                        </div>
+                        
+                        <div class="tab-content active" id="distributionTab">
+                            <div class="chart-container">
+                                <canvas id="distributionChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="tab-content" id="distanceTab">
+                            <div class="chart-container">
+                                <canvas id="distanceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Legend -->
+                <div class="card" data-aos="fade-up" data-aos-delay="500">
+                    <div class="card-header">
+                        <i class="fas fa-palette"></i>
+                        Legend
+                    </div>
+                    <div class="card-body">
+                        <div class="legend" id="legendContent">
+                            <!-- Legend items will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="card" data-aos="fade-up" data-aos-delay="600">
+                    <div class="card-header">
+                        <i class="fas fa-tools"></i>
+                        Actions
+                    </div>
+                    <div class="card-body">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <button class="btn btn-warning" onclick="resetFilters()">
+                                <i class="fas fa-undo"></i>
+                                Reset
+                            </button>
+                            <button class="btn btn-success" onclick="exportToCSV()">
+                                <i class="fas fa-download"></i>
+                                Export
+                            </button>
+                            <button class="btn btn-primary" onclick="showTableView()">
+                                <i class="fas fa-table"></i>
+                                Table
+                            </button>
+                            <button class="btn btn-danger" onclick="generateReport()">
+                                <i class="fas fa-file-pdf"></i>
+                                Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button class="fab animate-pulse" onclick="centerMap()" title="Center Map">
+        <i class="fas fa-crosshairs"></i>
+    </button>
+
+    <!-- Table Modal -->
+    <div id="tableModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; padding: 2rem;">
+        <div style="background: var(--bg-primary); border-radius: var(--border-radius); max-width: 1200px; margin: 0 auto; height: 100%; overflow: hidden; display: flex; flex-direction: column;">
+            <div style="padding: 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <h3><i class="fas fa-table"></i> Data Table</h3>
+                <button class="btn btn-secondary" onclick="hideTableView()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div style="flex: 1; overflow: auto; padding: 1.5rem;">
+                <div class="table-container">
+                    <table class="table" id="dataTable">
+                        <thead>
+                            <tr>
+                                <th>ITC Unit</th>
+                                <th>Company</th>
+                                <th>City</th>
+                                <th>State</th>
+                                <th>Distance (km)</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Table rows will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <div id="notificationContent"></div>
+    </div>
+
+    <script>
+        // Global variables
+        let map, heatmapLayer, drawnLines = [], coverageZones = [];
+        let markerClusters = {}, itcMarkers = {}, allMarkers = [];
+        let currentTheme = 'light', sidebarOpen = true;
+        let clusteringEnabled = true, currentFilters = {};
+        let distributionChart, distanceChart;
+        let selectedITCUnit = 'All';
+
+        // Company colors with enhanced gradients
+        const companyColors = {
+            'Ajanta': '#FF6B6B', 'Zydus': '#4ECDC4', 'Alkem': '#45B7D1', 'Mankind': '#96CEB4',
+            'Lupin': '#FFEAA7', 'Dr. Reddy\'s': '#DDA0DD', 'Torrent': '#98D8C8', 'Sun Pharma': '#F7DC6F',
+            'Cipla': '#BB8FCE', 'Glenmark': '#85C1E9', 'Aurobindo': '#F8C471', 'IPCA': '#82E0AA',
+            'Piramal': '#F1948A', 'Abott': '#AED6F1', 'Jubilant': '#A9DFBF', 'Alembic': '#D7BDE2'
+        };
+
+        // City coordinates (same as before)
+        const cityCoordinates = {
+            'Chennai': [13.0827, 80.2707], 'Haridwar': [29.9457, 78.1642], 'Nadiad': [22.6916, 72.8634],
+            'Dahej': [21.7051, 72.6406], 'Paithan': [19.4788, 75.3789], 'Chittegaon': [19.4788, 75.3789],
+            'Chikalthana': [19.8762, 75.3433], 'Ahmedabad': [23.0225, 72.5714], 'Changodar': [22.9308, 72.5019],
+            'Matoda': [23.0688, 72.8567], 'Vatva': [22.9725, 72.6269], 'Baddi': [30.9583, 76.3664],
+            'Daman': [20.3974, 72.8328], 'Mandva': [22.8352, 73.3065], 'Indore': [22.7196, 75.8577],
+            'Udaipur': [24.5854, 73.7125], 'Boisar': [19.7970, 72.7581], 'Mandideep': [23.0818, 77.5016],
+            'Ankleshwar': [21.6265, 73.0021], 'Aurangabad': [19.8762, 75.3433], 'Verna': [15.3589, 73.9347],
+            'Bari Brahmana': [32.9650, 74.9441], 'Pune': [18.5204, 73.8567], 'Pithampur': [22.6080, 75.6932],
+            'Nagpur': [21.1458, 79.0882], 'Visakhapatnam': [17.6868, 83.2185], 'Srikakulam': [18.2949, 84.0541],
+            'Bachupally': [17.4851, 78.3639], 'Indra': [23.2156, 72.6369], 'Gangtok': [27.3314, 88.6138],
+            'Majitar': [27.1865, 88.4974], 'Sanand': [22.9927, 72.3693], 'Gandhinagar': [23.2156, 72.6369],
+            'Kanchipuram': [12.8342, 79.7036], 'Mohali': [30.7046, 76.7179], 'Silvassa': [20.2755, 73.0088],
+            'Bharuch': [21.7051, 72.9959], 'Malanpur': [26.2784, 77.0841], 'Halol': [22.5033, 73.4726],
+            'Karkhali': [22.5, 73.1], 'Ganguwala': [29.4683, 78.1019], 'Dewas': [22.9676, 76.0506],
+            'Ponda': [15.4027, 73.9692], 'Ahmednagar': [19.0948, 74.7380], 'Solan': [30.9085, 77.0970],
+            'Bengaluru': [12.9716, 77.5946], 'Patalganga': [18.4874, 73.2258], 'Kurkumbh': [18.4387, 73.3872],
+            'Palghar': [19.6967, 72.7691], 'Mahad': [18.0832, 73.4186], 'Nellore': [14.4426, 79.9865],
+            'Zaghadia': [21.2198, 72.7519], 'Savli': [22.5570, 73.2315], 'Vadodara': [22.3072, 73.1812],
+            'Borpatla': [17.3850, 78.4867], 'Chitkul': [17.4399, 78.1385], 'Gaddapothram': [17.5247, 78.2898],
+            'Gundlamachanoor': [17.4123, 78.3647], 'Polepally': [17.2883, 78.4117], 'Pashamylaram': [17.5247, 78.4475],
+            'Bollaram': [17.5944, 78.2598], 'E Bonangi': [17.5247, 78.4475], 'Pydibhimavaram': [17.0005, 82.2177],
+            'Sangareddy': [17.6201, 78.0922], 'Virgonagar': [12.2958, 77.4684], 'Bommasandra-Jigani Link Road': [12.7996, 77.6677],
+            'Satara': [17.6868, 74.0183], 'Nalagarh': [31.0424, 76.7174], 'Nashik': [19.9975, 73.7898],
+            'Bain Kuan': [31.2830, 76.5180], 'Duga Resa': [27.3, 88.6], 'Kumrek': [27.327, 88.370],
+            'Rorathang': [27.2, 88.5], 'Tansa': [30.2, 76.5]
+        };
+
+        // Pharmacy data (same as before)
+        const pharmacyData = [
+            {company: 'Ajanta', city: 'Dahej', state: 'Gujarat', nearestITC: 'Nadiad', distance: 160},
+            {company: 'Ajanta', city: 'Paithan', state: 'Maharashtra', nearestITC: 'Nadiad', distance: 620},
+            {company: 'Ajanta', city: 'Chittegaon', state: 'Maharashtra', nearestITC: 'Nadiad', distance: 586},
+            {company: 'Ajanta', city: 'Chikalthana', state: 'Maharashtra', nearestITC: 'Nadiad', distance: 583},
+            {company: 'Zydus', city: 'Ahmedabad', state: 'Gujarat', nearestITC: 'Nadiad', distance: 61},
+            {company: 'Zydus', city: 'Ahmedabad', state: 'Gujarat', nearestITC: 'Nadiad', distance: 57},
+            {company: 'Zydus', city: 'Changodar', state: 'Gujarat', nearestITC: 'Nadiad', distance: 60},
+            {company: 'Zydus', city: 'Matoda', state: 'Gujarat', nearestITC: 'Nadiad', distance: 71},
+            {company: 'Zydus', city: 'Matoda', state: 'Gujarat', nearestITC: 'Nadiad', distance: 71},
+            {company: 'Zydus', city: 'Matoda', state: 'Gujarat', nearestITC: 'Nadiad', distance: 71},
+            {company: 'Zydus', city: 'Vatva', state: 'Gujarat', nearestITC: 'Nadiad', distance: 35},
+            {company: 'Zydus', city: 'Baddi', state: 'Himachal Pradesh', nearestITC: 'Haridwar', distance: 230},
+            {company: 'Alkem', city: 'Baddi', state: 'Himachal Pradesh', nearestITC: 'Haridwar', distance: 230},
+            {company: 'Alkem', city: 'Daman', state: 'Dadra and Nagar Haveli', nearestITC: 'Nadiad', distance: 322},
+            {company: 'Alkem', city: 'Mandva', state: 'Gujarat', nearestITC: 'Nadiad', distance: 82},
+            {company: 'Alkem', city: 'Indore', state: 'Madhya Pradesh', nearestITC: 'Nadiad', distance: 373},
+            {company: 'Mankind', city: 'Bain Kuan', state: 'Himachal', nearestITC: 'Haridwar', distance: 112},
+            {company: 'Mankind', city: 'Bain Kuan', state: 'Himachal', nearestITC: 'Haridwar', distance: 112},
+            {company: 'Mankind', city: 'Bain Kuan', state: 'Himachal', nearestITC: 'Haridwar', distance: 112},
+            {company: 'Mankind', city: 'Bain Kuan', state: 'Himachal', nearestITC: 'Haridwar', distance: 112},
+            {company: 'Mankind', city: 'Bain Kuan', state: 'Himachal', nearestITC: 'Haridwar', distance: 112},
+            {company: 'Mankind', city: 'Bain Kuan', state: 'Himachal', nearestITC: 'Haridwar', distance: 112},
+            {company: 'Mankind', city: 'Udaipur', state: 'Rajasthan', nearestITC: 'Nadiad', distance: 284},
+            {company: 'Lupin', city: 'Boisar', state: 'Maharashtra', nearestITC: 'Nadiad', distance: 404},
+            {company: 'Lupin', city: 'Mandideep', state: 'Madhya Pradesh', nearestITC: 'Nadiad', distance: 583},
+            {company: 'Lupin', city: 'Ankleshwar', state: 'Gujarat', nearestITC: 'Nadiad', distance: 160},
+            {company: 'Lupin', city: 'Aurangabad', state: 'Maharashtra', nearestITC: 'Nadiad', distance: 583},
+            {company: 'Lupin', city: 'Verna', state: 'Goa', nearestITC: 'Chennai', distance: 920},
+            {company: 'Lupin', city: 'Bari Brahmana', state: 'Jammu & Kashmir', nearestITC: 'Haridwar', distance: 545},
+            {company: 'Lupin', city: 'Pune', state: 'Maharashtra', nearestITC: 'Nadiad', distance: 614},
+            {company: 'Lupin', city: 'Pithampur', state: 'Madhya Pradesh', nearestITC: 'Nadiad', distance: 346},
+            {company: 'Lupin', city: 'Nagpur', state: 'Maharashtra', nearestITC: 'Chennai', distance: 1013},
+            {company: 'Lupin', city: 'Duga Resa', state: 'Sikkim', nearestITC: null, distance: null},
+            {company: 'Dr. Reddy\'s', city: 'Baddi', state: 'Himachal Pradesh', nearestITC: 'Haridwar', distance: 235},
+            {company: 'Dr. Reddy\'s', city: 'Visakhapatnam', state: 'Andhra Pradesh', nearestITC: 'Chennai', distance: 800},
+            {company: 'Dr. Reddy\'s', city: 'Baddi', state: 'Himachal Pradesh', nearestITC: 'Haridwar', distance: 234},
+            {company: 'Dr. Reddy\'s', city: 'Srikakulam', state: 'Andhra Pradesh', nearestITC: 'Chennai', distance: 875},
+            {company: 'Dr. Reddy\'s', city: 'Bachupally', state: 'Telangana', nearestITC: 'Chennai', distance: 702},
+            {company: 'Dr. Reddy\'s', city: 'Baddi', state: 'Himachal Pradesh', nearestITC: 'Haridwar', distance: 234},
+            {company: 'Dr. Reddy\'s', city: 'Visakhapatnam', state: 'Andhra Pradesh', nearestITC: 'Chennai', distance: 800},
+            {company: 'Dr. Reddy\'s', city: 'Srikakulam', state: 'Andhra Pradesh', nearestITC: 'Chennai', distance: 870},
+            {company: 'Dr. Reddy\'s', city: 'Bachupally', state: 'Telangana', nearestITC: 'Chennai', distance: 703},
+            {company: 'Dr. Reddy\'s', city: 'Srikakulam', state: 'Andhra Pradesh', nearestITC: 'Chennai', distance: 869},
+            {company: 'Torrent', city: 'Dahej', state: 'Gujarat', nearestITC: 'Nadiad', distance: 185},
+            {company: 'Torrent', city: 'Pithampur', state: 'Madhya Pradesh', nearestITC: 'Nadiad', distance: 343},
+            {company: 'Torrent', city: 'Indra', state: 'Gujarat', nearestITC: 'Nadiad', distance: 89},
+            {company: 'Torrent', city: 'Baddi', state: 'Himachal Pradesh', nearestITC: 'Haridwar', distance: 238},
+            {company: 'Torrent', city: 'Gangtok', state: 'Sikkim', nearestITC: 'Haridwar', distance: 1524},
+            {company: 'Torrent', city: 'Visakhapatnam', state: 'Andhra Pradesh', nearestITC: 'Chennai', distance: 778},
+            {company: 'Torrent', city: 'Majitar', state: 'Sikkim', nearestITC: 'Haridwar', distance: 1504},
+            {company: 'Torrent', city: 'Sanand', state: 'Gujarat', nearestITC: 'Nadiad', distance: 85},
+            {company: 'Torrent', city: 'Gandhinagar', state: 'Gujarat', nearestITC: 'Nadiad', distance: 85},
+            {company: 'Torrent', city: 'Gandhinagar', state: 'Gujarat', nearestITC: 'Nadiad', distance: 57},
+            {company: 'Sun Pharma', city: 'Ankleshwar', state: 'Gujarat', nearestITC: 'Nadiad', distance: 164},
+            {company: 'Sun Pharma', city: 'Kanchipuram', state: 'Tamil Nadu', nearestITC: 'Chennai', distance: 97},
+            {company: 'Sun Pharma', city: 'Mohali', state: 'Punjab', nearestITC: 'Haridwar', distance: 213},
+            {company: 'Sun Pharma', city: 'Silvassa', state: 'Dadra & Nagar Haveli', nearestITC: 'Nadiad', distance: 331},
+            {company: 'Sun Pharma', city: 'Bharuch', state: 'Gujarat', nearestITC: 'Nadiad', distance: 171},
+            {company: 'Sun Pharma', city: 'Malanpur', state: 'Madhya Pradesh', nearestITC: 'Haridwar', distance: 526},
+            {company: 'Sun Pharma', city: 'Halol', state: 'Gujarat', nearestITC: 'Nadiad', distance: 100},
+            {company: 'Sun Pharma', city: 'Karkhali', state: 'Gujarat', nearestITC: 'Nadiad', distance: 104},
+            {company: 'Sun Pharma', city: 'Dadra and Nagar Haveli', state: 'Dadra & Nagar Haveli', nearestITC: 'Nadiad', distance: 325},
+            {company: 'Sun Pharma', city: 'Dahej', state: 'Gujarat', nearestITC: 'Nadiad', distance: 176},
+            {company: 'Sun Pharma', city: 'Ganguwala', state: 'Himachal Pradesh', nearestITC: 'Haridwar', distance: 112},
+            {company: 'Sun Pharma', city: 'Dewas', state: 'Madhya Pradesh', nearestITC: 'Nadiad', distance: 413},
+            {company: 'Sun Pharma', city: 'Tansa', state: 'Punjab', nearestITC: 'Haridwar', distance: 264},
+            {company: 'Sun Pharma', city: 'Ponda', state: 'Goa', nearestITC: 'Chennai', distance: 912},
+            {company: 'Sun Pharma', city: 'Ahmednagar', state: 'Maharashtra', nearestITC: 'Nadiad', distance: 573},
+            {company: 'Sun Pharma', city: 'Solan', state: 'Himachal Pradesh', nearestITC: 'Haridwar', distance: 231},
+            {company: 'Sun Pharma', city: 'Bengaluru', state: 'Karnataka', nearestITC: 'Chennai', distance: 314},
+            {company: 'Cipla', city: 'Patalganga', state: 'Maharashtra', nearestITC: 'Nadiad', distance: 511},
+            {company: 'Cipla', city: 'Kurkumbh', state: 'Maharashtra', nearestITC: 'Nadiad', distance: 647},
+            {company: 'Cipla', city: 'Verna', state: 'Goa', nearestITC: 'Chennai', distance: 921},
+            {company: 'Cipla', city: 'Baddi', state: 'Himachal Pradesh', nearestITC: 'Haridwar', distance: 237},
+            {company: 'Cipla', city: 'Pithampur', state: 'Madhya Pradesh', nearestITC: 'Nadiad', distance: 350},
+            {company: 'Cipla', city: 'Kumrek', state: 'Sikkim', nearestITC: 'Haridwar', distance: 1572},
+            {company: 'Cipla', city: 'Rorathang', state: 'Sikkim', nearestITC: null, distance: null},
+            {company: 'Cipla', city: 'Virgonagar', state: 'Karnataka', nearestITC: 'Chennai', distance: 287},
+            {company: 'Cipla', city: 'Bommasandra-Jigani Link Road', state: 'Karnataka', nearestITC: 'Chennai', distance: 344},
+            {company: 'Cipla', city: 'Satara', state: 'Maharashtra', nearestITC: null, distance: null},
+            {company: 'Glenmark', city: 'Baddi', state: 'Himachal Pradesh', nearestITC: 'Haridwar', distance: 250},
+            {company: 'Glenmark', city: 'Nalagarh', state: 'Himachal Pradesh', nearestITC: 'Haridwar', distance: 250},
+            {company: 'Glenmark', city: 'Indore', state: 'Madhya Pradesh', nearestITC: 'Nadiad', distance: 386},
+            {company: 'Glenmark', city: 'Nashik', state: 'Maharashtra', nearestITC: 'Nadiad', distance: 415},
+            {company: 'Aurobindo', city: 'Bachupally', state: 'Telangana', nearestITC: 'Chennai', distance: 700},
+            {company: 'Aurobindo', city: 'Pydibhimavaram', state: 'Andhra Pradesh', nearestITC: 'Chennai', distance: 868},
+            {company: 'Aurobindo', city: 'Bachupally', state: 'Telangana', nearestITC: 'Chennai', distance: 700},
+            {company: 'Aurobindo', city: 'E Bonangi', state: 'Andhra Pradesh', nearestITC: 'Chennai', distance: 779},
+            {company: 'Aurobindo', city: 'Bollaram', state: 'Telangana', nearestITC: 'Chennai', distance: 722},
+            {company: 'Aurobindo', city: 'Chitkul', state: 'Telangana', nearestITC: 'Chennai', distance: 706},
+            {company: 'Aurobindo', city: 'Pashamylaram', state: 'Telangana', nearestITC: 'Chennai', distance: 710},
+            {company: 'Aurobindo', city: 'Borpatla', state: 'Telangana', nearestITC: 'Chennai', distance: 710},
+            {company: 'Aurobindo', city: 'E Bonangi', state: 'Andhra Pradesh', nearestITC: 'Chennai', distance: 780},
+            {company: 'Aurobindo', city: 'Gaddapothram', state: 'Telangana', nearestITC: 'Chennai', distance: 709},
+            {company: 'Aurobindo', city: 'Gundlamachanoor', state: 'Telangana', nearestITC: 'Chennai', distance: 709},
+            {company: 'Aurobindo', city: 'Polepally', state: 'Telangana', nearestITC: 'Chennai', distance: 600},
+            {company: 'Aurobindo', city: 'E Bonangi', state: 'Andhra Pradesh', nearestITC: 'Chennai', distance: 800},
+            {company: 'IPCA', city: 'Palghar', state: 'Maharashtra', nearestITC: 'Nadiad', distance: 408},
+            {company: 'IPCA', city: 'Ankleshwar', state: 'Gujarat', nearestITC: 'Nadiad', distance: 161},
+            {company: 'IPCA', city: 'Aurangabad', state: 'Maharashtra', nearestITC: 'Nadiad', distance: 570},
+            {company: 'IPCA', city: 'Indore', state: 'Madhya Pradesh', nearestITC: 'Nadiad', distance: 372},
+            {company: 'IPCA', city: 'Mahad', state: 'Maharashtra', nearestITC: 'Nadiad', distance: 644},
+            {company: 'IPCA', city: 'Dewas', state: 'Madhya Pradesh', nearestITC: 'Nadiad', distance: 409},
+            {company: 'IPCA', city: 'Nellore', state: 'Andhra Pradesh', nearestITC: 'Chennai', distance: 195},
+            {company: 'IPCA', city: 'Visakhapatnam', state: 'Andhra Pradesh', nearestITC: 'Chennai', distance: 767},
+            {company: 'Piramal', city: 'Ahmedabad', state: 'Gujarat', nearestITC: 'Nadiad', distance: 72},
+            {company: 'Piramal', city: 'Sangareddy', state: 'Telangana', nearestITC: 'Chennai', distance: 740},
+            {company: 'Piramal', city: 'Indore', state: 'Madhya Pradesh', nearestITC: 'Nadiad', distance: 353},
+            {company: 'Piramal', city: 'Chennai', state: 'Tamil Nadu', nearestITC: 'Chennai', distance: 5},
+            {company: 'Piramal', city: 'Mahad', state: 'Maharashtra', nearestITC: 'Nadiad', distance: 650},
+            {company: 'Abott', city: 'Zaghadia', state: 'Gujarat', nearestITC: 'Nadiad', distance: 173},
+            {company: 'Jubilant', city: 'Savli', state: 'Gujarat', nearestITC: 'Nadiad', distance: 82},
+            {company: 'Alembic', city: 'Vadodara', state: 'Gujarat', nearestITC: 'Nadiad', distance: 81},
+            {company: 'Alembic', city: 'Baddi', state: 'Himachal Pradesh', nearestITC: 'Haridwar', distance: 235},
+            {company: 'Alembic', city: 'Majitar', state: 'Sikkim', nearestITC: 'Haridwar', distance: 1720}
+        ];
+
+        // Initialize application
+        function initializeApp() {
+            showLoading();
+            createParticles();
+            
+            setTimeout(() => {
+                initializeMap();
+                setupEventListeners();
+                populateDropdowns();
+                createLegend();
+                updateStatistics();
+                initializeCharts();
+                setupQuickFilters();
+                applyFilters();
+                hideLoading();
+                
+                // Initialize AOS animations
+                AOS.init({
+                    duration: 800,
+                    easing: 'ease-in-out-cubic',
+                    once: true,
+                    offset: 100
+                });
+                
+                // Show ITC info panel
+                setTimeout(() => {
+                    document.getElementById('itcInfoPanel').classList.add('show');
+                }, 1000);
+            }, 1500);
+        }
+
+        // Create floating particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Initialize map
+        function initializeMap() {
+            map = L.map('map', {
+                zoomControl: false,
+                attributionControl: false
+            }).setView([21.7679, 78.8718], 5);
+            
+            // Add custom zoom control
+            L.control.zoom({
+                position: 'bottomright'
+            }).addTo(map);
+            
+            // Add tile layer with custom styling
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            createMarkerClusters();
+            createITCMarkers();
+            createPharmaMarkers();
+        }
+
+        // Create marker clusters
+        function createMarkerClusters() {
+            Object.keys(companyColors).forEach(company => {
+                markerClusters[company] = L.markerClusterGroup({
+                    iconCreateFunction: function(cluster) {
+                        const childCount = cluster.getChildCount();
+                        const color = companyColors[company];
+                        
+                        return new L.DivIcon({ 
+                            html: `<div style="background: linear-gradient(135deg, ${color}, ${color}dd); color: white; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 6px 20px rgba(0,0,0,0.3); font-weight: bold; font-size: 14px; animation: pulse 2s infinite;">${childCount}</div>`, 
+                            className: 'custom-cluster-icon', 
+                            iconSize: new L.Point(45, 45) 
+                        });
+                    },
+                    spiderfyOnMaxZoom: true,
+                    showCoverageOnHover: false,
+                    zoomToBoundsOnClick: true,
+                    maxClusterRadius: 50
+                });
+            });
+        }
+
+        // Create ITC markers
+        function createITCMarkers() {
+            ['Chennai', 'Haridwar', 'Nadiad'].forEach(city => {
+                itcMarkers[city] = L.marker(cityCoordinates[city], {
+                    icon: L.divIcon({
+                        className: 'itc-marker',
+                        html: `<div style="background: linear-gradient(135deg, #1a1a1a, #333); color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 4px solid #ffd700; box-shadow: 0 8px 25px rgba(0,0,0,0.4); font-size: 12px; animation: pulse 3s infinite;">ITC</div>`,
+                        iconSize: [55, 55],
+                        iconAnchor: [27.5, 27.5]
+                    }),
+                    zIndexOffset: 1000
+                }).bindPopup(`
+                    <div style="min-width: 280px; padding: 15px;">
+                        <div style="font-weight: bold; font-size: 20px; margin-bottom: 15px; color: #1a1a1a; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-building" style="color: #ffd700;"></i> ITC ${city}
+                        </div>
+                        <div style="color: #666; line-height: 1.8;">
+                            <div style="margin-bottom: 8px;"><i class="fas fa-map-marker-alt" style="color: #667eea; width: 20px;"></i> <strong>Location:</strong> ${city}</div>
+                            <div style="margin-bottom: 8px;"><i class="fas fa-industry" style="color: #667eea; width: 20px;"></i> <strong>Division:</strong> Printing & Packaging</div>
+                            <div style="margin-bottom: 8px;"><i class="fas fa-chart-line" style="color: #667eea; width: 20px;"></i> <strong>Status:</strong> <span style="color: #10b981;">Active</span></div>
+                            <div style="margin-bottom: 8px;"><i class="fas fa-pills" style="color: #667eea; width: 20px;"></i> <strong>Nearby Units:</strong> ${pharmacyData.filter(d => d.nearestITC === city).length}</div>
+                        </div>
+                        <div style="margin-top: 15px; padding: 10px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 8px; color: white; text-align: center; font-size: 12px;">
+                            <i class="fas fa-info-circle"></i> Click to focus on this unit
+                        </div>
+                    </div>
+                `, {
+                    maxWidth: 350,
+                    className: 'custom-popup'
+                });
+                
+                // Add click event to focus on ITC unit
+                itcMarkers[city].on('click', function() {
+                    selectITCUnit(city);
+                });
+                
+                itcMarkers[city].addTo(map);
+            });
+        }
+
+        // Create pharma markers
+        function createPharmaMarkers() {
+            pharmacyData.forEach(data => {
+                if (cityCoordinates[data.city] && data.distance !== null) {
+                    const marker = L.marker(cityCoordinates[data.city], {
+                        icon: L.divIcon({
+                            className: 'pharma-marker',
+                            html: `<div style="background: linear-gradient(135deg, ${companyColors[data.company]}, ${companyColors[data.company]}dd); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; border: 2px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: all 0.3s ease;">${data.company.substring(0, 3)}</div>`,
+                            iconSize: [32, 32],
+                            iconAnchor: [16, 16]
+                        })
+                    });
+                    
+                    marker.bindPopup(`
+                        <div style="min-width: 320px; padding: 20px;">
+                            <div style="font-weight: bold; font-size: 20px; margin-bottom: 15px; color: ${companyColors[data.company]}; display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-pills"></i> ${data.company}
+                            </div>
+                            <div style="color: #666; line-height: 2;">
+                                <div style="margin-bottom: 10px;"><i class="fas fa-map-marker-alt" style="color: #667eea; width: 20px;"></i> <strong>Location:</strong> ${data.city}, ${data.state}</div>
+                                <div style="margin-bottom: 10px;"><i class="fas fa-building" style="color: #667eea; width: 20px;"></i> <strong>Nearest ITC:</strong> ${data.nearestITC}</div>
+                                <div style="margin-bottom: 10px;"><i class="fas fa-route" style="color: #667eea; width: 20px;"></i> <strong>Distance:</strong> ${data.distance} km</div>
+                                <div style="margin-bottom: 10px;"><i class="fas fa-truck" style="color: #667eea; width: 20px;"></i> <strong>Est. Travel Time:</strong> ${Math.round(data.distance / 60)} hours</div>
+                            </div>
+                            <div style="margin-top: 15px; padding: 12px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 8px; font-size: 12px; border-left: 4px solid ${companyColors[data.company]};">
+                                <i class="fas fa-info-circle" style="color: ${companyColors[data.company]};"></i> Click to view detailed analytics and focus on location
+                            </div>
+                        </div>
+                    `, {
+                        maxWidth: 400,
+                        className: 'custom-popup'
+                    });
+                    
+                    // Add click event to focus on location
+                    marker.on('click', function() {
+                        focusOnLocation(data.city);
+                    });
+                    
+                    markerClusters[data.company].addLayer(marker);
+                    allMarkers.push({...data, marker});
+                }
+            });
+
+            // Add all clusters to map initially
+            Object.values(markerClusters).forEach(cluster => map.addLayer(cluster));
+        }
+
+        // Select ITC Unit function - KEY FEATURE
+        function selectITCUnit(unit) {
+            selectedITCUnit = unit;
+            
+            // Update button states
+            document.querySelectorAll('.itc-unit-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.unit === unit) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Update ITC info panel
+            updateITCInfoPanel(unit);
+            
+            // Apply filters with ITC unit selection
+            applyFilters();
+            
+            // Focus map on selected unit
+            if (unit !== 'All' && cityCoordinates[unit]) {
+                map.setView(cityCoordinates[unit], 7);
+            } else {
+                centerMap();
+            }
+            
+            showNotification(`Focused on ${unit === 'All' ? 'all ITC units' : 'ITC ' + unit}`, 'success');
+        }
+
+        // Update ITC Info Panel
+        function updateITCInfoPanel(unit) {
+            const title = document.getElementById('itcInfoTitle');
+            const stats = document.getElementById('itcInfoStats');
+            
+            if (unit === 'All') {
+                title.textContent = 'All ITC Units';
+                const totalUnits = pharmacyData.filter(d => d.distance !== null).length;
+                const avgDistance = Math.round(pharmacyData.filter(d => d.distance !== null).reduce((sum, d) => sum + d.distance, 0) / pharmacyData.filter(d => d.distance !== null).length);
+                
+                stats.innerHTML = `
+                    <div class="itc-stat">
+                        <div class="itc-stat-value">${totalUnits}</div>
+                        <div class="itc-stat-label">Total Units</div>
+                    </div>
+                    <div class="itc-stat">
+                        <div class="itc-stat-value">${avgDistance}</div>
+                        <div class="itc-stat-label">Avg Distance</div>
+                    </div>
+                    <div class="itc-stat">
+                        <div class="itc-stat-value">3</div>
+                        <div class="itc-stat-label">ITC Locations</div>
+                    </div>
+                    <div class="itc-stat">
+                        <div class="itc-stat-value">${Object.keys(companyColors).length}</div>
+                        <div class="itc-stat-label">Companies</div>
+                    </div>
+                `;
+            } else {
+                title.textContent = `ITC ${unit}`;
+                const unitData = pharmacyData.filter(d => d.nearestITC === unit && d.distance !== null);
+                const nearbyUnits = unitData.filter(d => d.distance <= 100).length;
+                const avgDistance = unitData.length > 0 ? Math.round(unitData.reduce((sum, d) => sum + d.distance, 0) / unitData.length) : 0;
+                const companies = [...new Set(unitData.map(d => d.company))].length;
+                
+                stats.innerHTML = `
+                    <div class="itc-stat">
+                        <div class="itc-stat-value">${unitData.length}</div>
+                        <div class="itc-stat-label">Pharma Units</div>
+                    </div>
+                    <div class="itc-stat">
+                        <div class="itc-stat-value">${nearbyUnits}</div>
+                        <div class="itc-stat-label">Nearby (&lt;100km)</div>
+                    </div>
+                    <div class="itc-stat">
+                        <div class="itc-stat-value">${avgDistance}</div>
+                        <div class="itc-stat-label">Avg Distance</div>
+                    </div>
+                    <div class="itc-stat">
+                        <div class="itc-stat-value">${companies}</div>
+                        <div class="itc-stat-label">Companies</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', debounce(applyFilters, 300));
+            document.getElementById('pharmaDropdown').addEventListener('change', applyFilters);
+            
+            const distanceSlider = document.getElementById('distanceSlider');
+            distanceSlider.addEventListener('input', function() {
+                updateRangeValue(this.value);
+                debounce(applyFilters, 100)();
+            });
+            
+            document.getElementById('clusterToggle').addEventListener('change', toggleClustering);
+            document.getElementById('heatmapToggle').addEventListener('change', toggleHeatmap);
+            document.getElementById('linesToggle').addEventListener('change', toggleDistanceLines);
+            document.getElementById('coverageToggle').addEventListener('change', toggleCoverageZones);
+
+            // Map events
+            map.on('popupopen', function(e) {
+                showNotification('Marker details loaded', 'success');
+            });
+
+            map.on('zoomend', function() {
+                updateRangeValue(document.getElementById('distanceSlider').value);
+            });
+        }
+
+        // Setup quick filters
+        function setupQuickFilters() {
+            document.querySelectorAll('.filter-pill').forEach(pill => {
+                pill.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+                    this.classList.add('active');
+                    applyPreset(this.dataset.preset);
+                });
+            });
+        }
+
+        // Populate dropdowns
+        function populateDropdowns() {
+            const pharmaDropdown = document.getElementById('pharmaDropdown');
+            const companies = [...new Set(pharmacyData.map(d => d.company))].sort();
+            
+            companies.forEach(company => {
+                const option = document.createElement('option');
+                option.value = company;
+                option.textContent = company;
+                pharmaDropdown.appendChild(option);
+            });
+        }
+
+        // Create legend
+        function createLegend() {
+            const legendContent = document.getElementById('legendContent');
+            
+            // ITC Units
+            const itcDiv = document.createElement('div');
+            itcDiv.className = 'legend-item';
+            itcDiv.innerHTML = `
+                <div class="legend-color" style="background: linear-gradient(135deg, #1a1a1a, #333); border: 3px solid #ffd700;"></div>
+                <div class="legend-text"><strong>ITC Units (3)</strong></div>
+            `;
+            legendContent.appendChild(itcDiv);
+            
+            // Pharma companies
+            Object.entries(companyColors).forEach(([company, color]) => {
+                const count = pharmacyData.filter(d => d.company === company).length;
+                const div = document.createElement('div');
+                div.className = 'legend-item';
+                div.innerHTML = `
+                    <div class="legend-color" style="background: linear-gradient(135deg, ${color}, ${color}dd);"></div>
+                    <div class="legend-text">${company} (${count} units)</div>
+                `;
+                div.addEventListener('click', () => {
+                    document.getElementById('pharmaDropdown').value = company;
+                    applyFilters();
+                    showNotification(`Filtered to ${company}`, 'success');
+                });
+                legendContent.appendChild(div);
+            });
+        }
+
+        // Update statistics
+        function updateStatistics(data = pharmacyData) {
+            const validData = data.filter(d => d.distance !== null);
+            const totalCompanies = [...new Set(data.map(d => d.company))].length;
+            const totalUnits = data.length;
+            const avgDistance = validData.length > 0 ? Math.round(validData.reduce((sum, d) => sum + d.distance, 0) / validData.length) : 0;
+            const nearbyUnits = validData.filter(d => d.distance <= 100).length;
+            
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = `
+                <div class="stat-card" data-aos="zoom-in">
+                    <div class="stat-value">${totalCompanies}</div>
+                    <div class="stat-label">Companies</div>
+                </div>
+                <div class="stat-card" data-aos="zoom-in" data-aos-delay="100">
+                    <div class="stat-value">${totalUnits}</div>
+                    <div class="stat-label">Total Units</div>
+                </div>
+                <div class="stat-card" data-aos="zoom-in" data-aos-delay="200">
+                    <div class="stat-value">${avgDistance}</div>
+                    <div class="stat-label">Avg Distance (km)</div>
+                </div>
+                <div class="stat-card" data-aos="zoom-in" data-aos-delay="300">
+                    <div class="stat-value">${nearbyUnits}</div>
+                    <div class="stat-label">Nearby Units</div>
+                </div>
+            `;
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            const distributionCtx = document.getElementById('distributionChart').getContext('2d');
+            const distanceCtx = document.getElementById('distanceChart').getContext('2d');
+            
+            // Company distribution chart
+            const companyData = Object.keys(companyColors).map(company => ({
+                company,
+                count: pharmacyData.filter(d => d.company === company).length,
+                color: companyColors[company]
+            })).sort((a, b) => b.count - a.count);
+            
+            distributionChart = new Chart(distributionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: companyData.map(d => d.company),
+                    datasets: [{
+                        data: companyData.map(d => d.count),
+                        backgroundColor: companyData.map(d => d.color),
+                        borderWidth: 3,
+                        borderColor: '#fff',
+                        hoverBorderWidth: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: '#667eea',
+                            borderWidth: 1
+                        }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        duration: 2000
+                    }
+                }
+            });
+            
+            // Distance distribution chart
+            const distanceRanges = [
+                { label: '0-100km', min: 0, max: 100, color: '#10b981' },
+                { label: '100-300km', min: 100, max: 300, color: '#3b82f6' },
+                { label: '300-500km', min: 300, max: 500, color: '#f59e0b' },
+                { label: '500-1000km', min: 500, max: 1000, color: '#ef4444' },
+                { label: '1000km+', min: 1000, max: Infinity, color: '#8b5cf6' }
+            ];
+            
+            const distanceData = distanceRanges.map(range => ({
+                label: range.label,
+                count: pharmacyData.filter(d => d.distance >= range.min && d.distance < range.max).length,
+                color: range.color
+            }));
+            
+            distanceChart = new Chart(distanceCtx, {
+                type: 'bar',
+                data: {
+                    labels: distanceData.map(d => d.label),
+                    datasets: [{
+                        label: 'Number of Units',
+                        data: distanceData.map(d => d.count),
+                        backgroundColor: distanceData.map(d => d.color),
+                        borderColor: distanceData.map(d => d.color),
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: '#667eea',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            },
+                            ticks: {
+                                color: '#666'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#666'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            });
+        }
+
+        // Enhanced Apply filters - KEY FEATURE UPDATE
+        function applyFilters() {
+            showLoading();
+            
+            setTimeout(() => {
+                clearLines();
+                clearCoverageZones();
+                
+                const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+                const selectedPharma = document.getElementById('pharmaDropdown').value;
+                const maxDistance = parseInt(document.getElementById('distanceSlider').value);
+                
+                // Filter data based on selected ITC unit - THIS IS THE KEY CHANGE
+                let filteredData = pharmacyData.filter(d => {
+                    const matchesSearch = !searchTerm || 
+                        d.company.toLowerCase().includes(searchTerm) || 
+                        d.city.toLowerCase().includes(searchTerm) ||
+                        d.state.toLowerCase().includes(searchTerm);
+                    const matchesPharma = selectedPharma === 'All' || d.company === selectedPharma;
+                    const matchesDistance = d.distance !== null && d.distance <= maxDistance;
+                    
+                    // KEY FILTER: Only show pharma units near the selected ITC unit
+                    const matchesITC = selectedITCUnit === 'All' || d.nearestITC === selectedITCUnit;
+                    
+                    return matchesSearch && matchesPharma && matchesDistance && matchesITC;
+                });
+
+                // Clear all markers
+                Object.values(markerClusters).forEach(cluster => map.removeLayer(cluster));
+                Object.values(itcMarkers).forEach(marker => map.removeLayer(marker));
+
+                // Show ITC markers based on selection
+                if (selectedITCUnit === 'All') {
+                    Object.values(itcMarkers).forEach(marker => marker.addTo(map));
+                } else if (itcMarkers[selectedITCUnit]) {
+                    itcMarkers[selectedITCUnit].addTo(map);
+                    if (document.getElementById('linesToggle').checked) {
+                        drawDistanceLines(selectedITCUnit, filteredData);
+                    }
+                    if (document.getElementById('coverageToggle').checked) {
+                        drawCoverageZones(selectedITCUnit);
+                    }
+                }
+
+                // Show filtered pharma markers (only those near selected ITC unit)
+                const activeCompanies = [...new Set(filteredData.map(d => d.company))];
+                activeCompanies.forEach(company => {
+                    if (markerClusters[company] && clusteringEnabled) {
+                        // Clear the cluster first
+                        markerClusters[company].clearLayers();
+                        
+                        // Add only the filtered markers
+                        filteredData.filter(d => d.company === company).forEach(data => {
+                            const marker = allMarkers.find(m => 
+                                m.company === data.company && 
+                                m.city === data.city && 
+                                m.distance === data.distance
+                            );
+                            if (marker && marker.marker) {
+                                markerClusters[company].addLayer(marker.marker);
+                            }
+                        });
+                        
+                        map.addLayer(markerClusters[company]);
+                    }
+                });
+
+                // Update components
+                updateStatistics(filteredData);
+                populateTable(filteredData);
+                updateCharts(filteredData);
+                
+                // Update heatmap if enabled
+                if (document.getElementById('heatmapToggle').checked) {
+                    updateHeatmap(filteredData);
+                }
+                
+                currentFilters = { filteredData };
+                hideLoading();
+                
+                const itcText = selectedITCUnit === 'All' ? 'all ITC units' : `ITC ${selectedITCUnit}`;
+                showNotification(`Showing ${filteredData.length} units near ${itcText}`, 'success');
+            }, 500);
+        }
+
+        // Update charts with filtered data
+        function updateCharts(data) {
+            // Update distribution chart
+            const companyData = Object.keys(companyColors).map(company => ({
+                company,
+                count: data.filter(d => d.company === company).length,
+                color: companyColors[company]
+            })).filter(d => d.count > 0).sort((a, b) => b.count - a.count);
+            
+            distributionChart.data.labels = companyData.map(d => d.company);
+            distributionChart.data.datasets[0].data = companyData.map(d => d.count);
+            distributionChart.data.datasets[0].backgroundColor = companyData.map(d => d.color);
+            distributionChart.update('active');
+            
+            // Update distance chart
+            const distanceRanges = [
+                { label: '0-100km', min: 0, max: 100, color: '#10b981' },
+                { label: '100-300km', min: 100, max: 300, color: '#3b82f6' },
+                { label: '300-500km', min: 300, max: 500, color: '#f59e0b' },
+                { label: '500-1000km', min: 500, max: 1000, color: '#ef4444' },
+                { label: '1000km+', min: 1000, max: Infinity, color: '#8b5cf6' }
+            ];
+            
+            const distanceData = distanceRanges.map(range => ({
+                label: range.label,
+                count: data.filter(d => d.distance >= range.min && d.distance < range.max).length,
+                color: range.color
+            }));
+            
+            distanceChart.data.datasets[0].data = distanceData.map(d => d.count);
+            distanceChart.update('active');
+        }
+
+        // Apply preset filters
+        function applyPreset(preset) {
+            showLoading();
+            
+            setTimeout(() => {
+                resetFilters(false);
+                
+                switch(preset) {
+                    case 'all':
+                        // Already reset
+                        break;
+                    case 'nearby':
+                        document.getElementById('distanceSlider').value = 100;
+                        updateRangeValue(100);
+                        break;
+                    case 'medium':
+                        document.getElementById('distanceSlider').value = 300;
+                        updateRangeValue(300);
+                        break;
+                    case 'top-companies':
+                        const topCompanies = ['Zydus', 'Sun Pharma', 'Dr. Reddy\'s', 'Aurobindo', 'Cipla'];
+                        document.getElementById('pharmaDropdown').value = topCompanies[0];
+                        break;
+                }
+                
+                applyFilters();
+                hideLoading();
+            }, 300);
+        }
+
+        // Reset filters
+        function resetFilters(showNotif = true) {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('pharmaDropdown').value = 'All';
+            document.getElementById('distanceSlider').value = 2000;
+            updateRangeValue(2000);
+            document.getElementById('heatmapToggle').checked = false;
+            document.getElementById('linesToggle').checked = false;
+            document.getElementById('coverageToggle').checked = false;
+            document.getElementById('clusterToggle').checked = true;
+            
+            document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+            document.querySelector('.filter-pill[data-preset="all"]').classList.add('active');
+            
+            if (heatmapLayer) {
+                map.removeLayer(heatmapLayer);
+            }
+            
+            clusteringEnabled = true;
+            
+            if (showNotif) {
+                applyFilters();
+                showNotification('Filters reset successfully', 'success');
+            }
+        }
+
+        // Toggle functions
+        function toggleClustering() {
+            clusteringEnabled = document.getElementById('clusterToggle').checked;
+            applyFilters();
+        }
+
+        function toggleHeatmap() {
+            const isEnabled = document.getElementById('heatmapToggle').checked;
+            if (isEnabled) {
+                updateHeatmap();
+            } else if (heatmapLayer) {
+                map.removeLayer(heatmapLayer);
+            }
+        }
+
+        function toggleDistanceLines() {
+            applyFilters();
+        }
+
+        function toggleCoverageZones() {
+            applyFilters();
+        }
+
+        // Update heatmap
+        function updateHeatmap(data = pharmacyData) {
+            if (heatmapLayer) {
+                map.removeLayer(heatmapLayer);
+            }
+            
+            const heatData = data
+                .filter(d => cityCoordinates[d.city] && d.distance !== null)
+                .map(d => [cityCoordinates[d.city][0], cityCoordinates[d.city][1], Math.min(d.distance / 100, 1)]);
+            
+            if (heatData.length > 0) {
+                heatmapLayer = L.heatLayer(heatData, {
+                    radius: 35,
+                    blur: 25,
+                    maxZoom: 12,
+                    gradient: {
+                        0.1: '#4ECDC4',
+                        0.3: '#44A08D', 
+                        0.5: '#667eea',
+                        0.7: '#764ba2',
+                        0.9: '#f093fb',
+                        1.0: '#f5576c'
+                    }
+                }).addTo(map);
+            }
+        }
+
+        // Draw distance lines
+        function drawDistanceLines(itc, data) {
+            if (!cityCoordinates[itc]) return;
+            
+            data.forEach(d => {
+                if (cityCoordinates[d.city] && d.nearestITC === itc) {
+                    const line = L.polyline([
+                        cityCoordinates[itc],
+                        cityCoordinates[d.city]
+                    ], {
+                        color: companyColors[d.company],
+                        weight: 3,
+                        opacity: 0.8,
+                        dashArray: '8, 12'
+                    }).addTo(map);
+                    
+                    // Add distance label
+                    const midpoint = [
+                        (cityCoordinates[itc][0] + cityCoordinates[d.city][0]) / 2,
+                        (cityCoordinates[itc][1] + cityCoordinates[d.city][1]) / 2
+                    ];
+                    
+                    const label = L.marker(midpoint, {
+                        icon: L.divIcon({
+                            className: 'distance-label',
+                            html: `<div style="background: white; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; border: 1px solid ${companyColors[d.company]}; color: ${companyColors[d.company]};">${d.distance}km</div>`,
+                            iconSize: [50, 20],
+                            iconAnchor: [25, 10]
+                        })
+                    }).addTo(map);
+                    
+                    drawnLines.push(line);
+                    drawnLines.push(label);
+                }
+            });
+        }
+
+        // Draw coverage zones
+        function drawCoverageZones(itc) {
+            if (!cityCoordinates[itc]) return;
+            
+            const radii = [100, 300, 500];
+            const colors = ['rgba(102, 126, 234, 0.15)', 'rgba(118, 75, 162, 0.1)', 'rgba(255, 107, 107, 0.05)'];
+            const borderColors = ['#667eea', '#764ba2', '#ff6b6b'];
+            
+            radii.forEach((radius, index) => {
+                const circle = L.circle(cityCoordinates[itc], {
+                    radius: radius * 1000,
+                    fillColor: colors[index],
+                    fillOpacity: 0.3,
+                    color: borderColors[index],
+                    weight: 2,
+                    dashArray: '10, 10'
+                }).addTo(map);
+                
+                circle.bindTooltip(`${radius}km coverage zone from ITC ${itc}`, {
+                    permanent: false,
+                    direction: 'center',
+                    className: 'coverage-tooltip'
+                });
+                
+                coverageZones.push(circle);
+            });
+        }
+
+        // Clear functions
+        function clearLines() {
+            drawnLines.forEach(line => map.removeLayer(line));
+            drawnLines = [];
+        }
+
+        function clearCoverageZones() {
+            coverageZones.forEach(zone => map.removeLayer(zone));
+            coverageZones = [];
+        }
+
+        // Populate table
+        function populateTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            data.forEach((d, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background: linear-gradient(135deg, #1a1a1a, #333); border: 2px solid #ffd700;"></div>
+                            ${d.nearestITC || 'N/A'}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background: linear-gradient(135deg, ${companyColors[d.company]}, ${companyColors[d.company]}dd);"></div>
+                            ${d.company}
+                        </div>
+                    </td>
+                    <td>${d.city}</td>
+                    <td>${d.state}</td>
+                    <td>
+                        <span style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 6px 12px; border-radius: 15px; font-size: 12px; font-weight: 600;">
+                            ${d.distance || 'N/A'} km
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="focusOnLocation('${d.city}')">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            showLoading();
+            
+            setTimeout(() => {
+                const data = currentFilters.filteredData || pharmacyData;
+                const headers = ['ITC Unit', 'Pharma Company', 'City', 'State', 'Distance (km)'];
+                const csvContent = [
+                    headers.join(','),
+                    ...data.map(d => [
+                        d.nearestITC || 'N/A',
+                        `"${d.company}"`,
+                        `"${d.city}"`,
+                        `"${d.state}"`,
+                        d.distance || 'N/A'
+                    ].join(','))
+                ].join('\n');
+
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', `itc_pharma_${selectedITCUnit.toLowerCase()}_${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                hideLoading();
+                showNotification('Data exported successfully!', 'success');
+            }, 1000);
+        }
+
+        // Generate report
+        function generateReport() {
+            showNotification('Advanced report generation feature coming soon!', 'warning');
+        }
+
+        // Show/hide table view
+        function showTableView() {
+            document.getElementById('tableModal').style.display = 'block';
+            populateTable(currentFilters.filteredData || pharmacyData);
+        }
+
+        function hideTableView() {
+            document.getElementById('tableModal').style.display = 'none';
+        }
+
+        // Focus on location
+        function focusOnLocation(city) {
+            if (cityCoordinates[city]) {
+                map.setView(cityCoordinates[city], 12);
+                hideTableView();
+                showNotification(`Focused on ${city}`, 'success');
+            }
+        }
+
+        // Center map
+        function centerMap() {
+            let allCoords = [];
+            
+            if (selectedITCUnit === 'All') {
+                Object.values(itcMarkers).forEach(marker => {
+                    allCoords.push(marker.getLatLng());
+                });
+                
+                pharmacyData.forEach(data => {
+                    if (cityCoordinates[data.city] && data.distance !== null) {
+                        allCoords.push(L.latLng(cityCoordinates[data.city]));
+                    }
+                });
+            } else {
+                // Focus on selected ITC unit and its nearby pharma units
+                if (cityCoordinates[selectedITCUnit]) {
+                    allCoords.push(L.latLng(cityCoordinates[selectedITCUnit]));
+                    
+                    pharmacyData.filter(d => d.nearestITC === selectedITCUnit && d.distance !== null).forEach(data => {
+                        if (cityCoordinates[data.city]) {
+                            allCoords.push(L.latLng(cityCoordinates[data.city]));
+                        }
+                    });
+                }
+            }
+            
+            if (allCoords.length > 0) {
+                const bounds = L.latLngBounds(allCoords);
+                map.fitBounds(bounds, { padding: [50, 50] });
+                showNotification('Map centered successfully', 'success');
+            }
+        }
+
+        // Show analytics tab
+        function showAnalyticsTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+
+        // Toggle theme
+        function toggleTheme() {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            document.getElementById('themeToggle').innerHTML = currentTheme === 'light' ? 
+                '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+            showNotification(`Switched to ${currentTheme} mode`, 'success');
+        }
+
+        // Toggle sidebar
+        function toggleSidebar() {
+            sidebarOpen = !sidebarOpen;
+            const sidebar = document.getElementById('sidebar');
+            
+            if (window.innerWidth <= 768) {
+                sidebar.classList.toggle('open');
+            } else {
+                sidebar.classList.toggle('collapsed');
+            }
+        }
+
+        // Utility functions
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function updateRangeValue(value) {
+            const rangeValue = document.getElementById('rangeValue');
+            const slider = document.getElementById('distanceSlider');
+            const percent = (value - slider.min) / (slider.max - slider.min);
+            rangeValue.style.left = `${percent * 100}%`;
+            rangeValue.textContent = `${value} km`;
+        }
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.add('show');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('show');
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const content = document.getElementById('notificationContent');
+            
+            const icons = {
+                success: 'check-circle',
+                error: 'exclamation-circle',
+                warning: 'exclamation-triangle',
+                info: 'info-circle'
+            };
+            
+            content.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <i class="fas fa-${icons[type]}" style="font-size: 1.2rem;"></i>
+                    <span style="font-weight: 500;">${message}</span>
+                </div>
+            `;
+            
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+
+        // Initialize app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+        // Handle window resize
+        window.addEventListener('resize', debounce(() => {
+            if (map) {
+                map.invalidateSize();
+            }
+        }, 250));
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('tableModal');
+            if (event.target === modal) {
+                hideTableView();
+            }
+        });
+
+        // Enhanced keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey || event.metaKey) {
+                switch(event.key) {
+                    case 'r':
+                        event.preventDefault();
+                        resetFilters();
+                        break;
+                    case 'e':
+                        event.preventDefault();
+                        exportToCSV();
+                        break;
+                    case 't':
+                        event.preventDefault();
+                        showTableView();
+                        break;
+                    case 'd':
+                        event.preventDefault();
+                        toggleTheme();
+                        break;
+                    case '1':
+                        event.preventDefault();
+                        selectITCUnit('Chennai');
+                        break;
+                    case '2':
+                        event.preventDefault();
+                        selectITCUnit('Haridwar');
+                        break;
+                    case '3':
+                        event.preventDefault();
+                        selectITCUnit('Nadiad');
+                        break;
+                    case '0':
+                        event.preventDefault();
+                        selectITCUnit('All');
+                        break;
+                }
+            }
+            
+            if (event.key === 'Escape') {
+                hideTableView();
+            }
+        });
+    </script>
+</body>
+</html>
